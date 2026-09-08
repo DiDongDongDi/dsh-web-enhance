@@ -1,0 +1,40 @@
+{
+  "name": "dsh-web-enhance",
+  "version": "0.1.0",
+  "description": "DSH Web GUI enhancements — session archive button (first feature) in a pure Cordis plugin, no file patches, survives dsh upgrades.",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "archive",
+    "session",
+    "web-ui"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
