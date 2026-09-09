@@ -1,7 +1,7 @@
 {
   "name": "dsh-web-enhance",
-  "version": "0.1.0",
-  "description": "DSH Web GUI enhancements — session archive button (first feature) in a pure Cordis plugin, no file patches, survives dsh upgrades.",
+  "version": "0.2.0",
+  "description": "DSH Web GUI enhancements — session archive button and selection \"add to chat\" quote popup, in a pure Cordis plugin, no file patches, survives dsh upgrades.",
   "keywords": [
     "deepseek-harness",
     "dsh",
@@ -9,6 +9,8 @@
     "cordis",
     "archive",
     "session",
+    "quote",
+    "selection",
     "web-ui"
   ],
   "license": "MIT",
