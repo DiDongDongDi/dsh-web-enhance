@@ -32,13 +32,6 @@ DeepSeek Harness **Web GUI 增强**插件集合（Cordis 纯插件，零文件�
   标准 props）。输入框是 Lexical contenteditable，DOM 注入无效，故不做 DOM hack。
 - 浮窗按下时 `preventDefault`，避免选区被清空；滚动/缩放时跟随选区，点击别处、
   按 `Esc` 或选区消失时自动收起。
-- 配色照搬 dsh 自己的浮层配方（`ui-dockkit` 的 `.float`）：`--dsw-alias-bg-layer-1`
-  + `--dsw-alias-border-l2` + `--dsw-alias-bg-mask-drop` + `--dsw-alias-label-primary`，
-  hover 用 `--dsw-alias-interactive-bg-hover-solid`（浮窗自身是不透明面，半透明的
-  `interactive-bg-hover` 会透出底下正文）。这些令牌定义在 `body` /
-  `body[data-ds-dark-theme]` 上，portal 到 `body` 的元素照样继承，深浅色自动跟随。
-  **不要给颜色写兜底值**：令牌名写错时会静默退化成硬编码色（深色模式白底白字），
-  没有兜底反而能立刻暴露问题。
 - 若框架改动导致 `useInput` / `inputActions.setDraft` 缺失，组件做能力检测后静默返回
   `null`，不会拖垮输入框渲染。
 

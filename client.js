@@ -42,23 +42,17 @@ window.__ModuleLoader__.load({
 			tag.setAttribute("data-plugin-css", "dsh-web-enhance");
 			tag.textContent = [
 				".dsh-enhance-archive-btn:hover{background:var(--dsw-alias-interactive-bg-hover)!important;color:var(--dsw-alias-label-primary)!important}",
-				".dsh-enhance-archive-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}",
+				".dsh-enhance-archive-btn:focus{outline:var(--dsw-alias-focus-ring,2px solid #3b82f6);outline-offset:1px}",
 				".dsh-enhance-archive-btn[aria-busy=true]{opacity:0.6;cursor:not-allowed}",
 				// 选区浮窗：portal 到 body，z-index 高于 shell.overlay 层（z=20）。
-				// 配色照搬 dsh 自己的浮层配方（ui-dockkit 的 .float）：设计令牌定义在
-				// body / body[data-ds-dark-theme] 上，portal 到 body 的元素照样继承，
-				// 深浅色自动跟随。绝不写颜色兜底值——令牌名写错时白底白字，而不是报错。
 				".dsh-enhance-quote-pop{position:fixed;z-index:60;display:inline-flex;align-items:center;gap:6px;"
 				+ "height:30px;padding:0 10px;border-radius:8px;white-space:nowrap;cursor:pointer;user-select:none;"
-				+ "background:var(--dsw-alias-bg-layer-1);"
-				+ "border:0.5px solid var(--dsw-alias-border-l2);"
-				+ "box-shadow:0 8px 24px var(--dsw-alias-bg-mask-drop);"
-				+ "color:var(--dsw-alias-label-primary);"
+				+ "border:1px solid var(--dsw-alias-border-primary,rgba(0,0,0,0.12));"
+				+ "background:var(--dsw-alias-bg-elevated,var(--dsw-alias-bg-primary,#fff));"
+				+ "color:var(--dsw-alias-label-primary,#111);box-shadow:0 4px 14px rgba(0,0,0,0.16);"
 				+ "font:inherit;font-size:13px;line-height:1}",
-				// 浮窗自身就是不透明面，hover 用 solid 变体；半透明的
-				// interactive-bg-hover 会把面盖掉、透出底下的正文。
-				".dsh-enhance-quote-pop:hover{background:var(--dsw-alias-interactive-bg-hover-solid)}",
-				".dsh-enhance-quote-pop:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}"
+				".dsh-enhance-quote-pop:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,0.05))}",
+				".dsh-enhance-quote-pop:focus{outline:var(--dsw-alias-focus-ring,2px solid #3b82f6);outline-offset:1px}"
 			].join("\n");
 			document.head.appendChild(tag);
 		}
@@ -144,7 +138,7 @@ window.__ModuleLoader__.load({
 					border: "none",
 					borderRadius: "6px",
 					background: "transparent",
-					color: error ? "var(--dsw-alias-state-error-primary)" : "var(--dsw-alias-label-secondary)",
+					color: error ? "var(--dsw-alias-destructive)" : "var(--dsw-alias-label-secondary)",
 					cursor: busy ? "not-allowed" : "pointer",
 					font: "inherit",
 					fontSize: "13px",
