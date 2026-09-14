@@ -1,40 +1,40 @@
 {
-  "name": "dsh-web-enhance",
-  "version": "0.2.0",
-  "description": "DSH Web GUI enhancements — session archive button + hide official right-sidebar expand control via CSS.",
-  "keywords": [
-    "deepseek-harness",
-    "dsh",
-    "dsh-plugin",
-    "cordis",
-    "archive",
-    "session",
-    "web-ui"
-  ],
-  "license": "MIT",
-  "type": "module",
-  "main": "index.js",
-  "exports": {
-    ".": "./index.js",
-    "./client": "./client.js",
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "index.js",
-    "client.js",
-    "cordis.patch.yml",
-    "README.zh.md",
-    "LICENSE"
-  ],
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
+    "name": "dsh-web-enhance",
+  "version": "0.2.1",
+  "description": "DSH Web GUI enhancements — session archive button (Cordis plugin, no file patches).",
+    "keywords": [
+        "deepseek-harness",
+        "dsh",
+        "dsh-plugin",
+        "cordis",
+        "archive",
+        "session",
+        "web-ui"
+    ],
+    "license": "MIT",
+    "type": "module",
+    "main": "index.js",
+    "exports": {
+        ".": "./index.js",
+        "./client": "./client.js",
+        "./package.json": "./package.json"
     },
-    "client": {
-      "platform": "web"
+    "files": [
+        "index.js",
+        "client.js",
+        "cordis.patch.yml",
+        "README.zh.md",
+        "LICENSE"
+    ],
+    "dsh": {
+        "bundle": {
+            "patch": "./cordis.patch.yml"
+        },
+        "client": {
+            "platform": "web"
+        }
+    },
+    "engines": {
+        "node": ">=22"
     }
-  },
-  "engines": {
-    "node": ">=22"
-  }
 }
