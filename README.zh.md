@@ -17,6 +17,18 @@ DeepSeek Harness **Web GUI 增强**插件集合（Cordis 纯插件，零文件�
 - **Client 半**（`client.js`）：预构建 CJS bundle（`window.__ModuleLoader__.load`），注册到
   `conversation.session.header.actions`（`replaceRisk: none`），点击直接归档，无二次确认。
 
+## 2. 隐藏官方右侧栏「展开」按钮
+
+官方 ExpandButton 占 single 席位 `conversation.session.header.corner`，第三方无法抢占；
+又不能禁用 `ui-sidebar-right`（`ui-chat` 依赖 `sidebarRight`）。本插件用 CSS 隐藏：
+
+```css
+[data-conversation-header-corner] { display: none !important; }
+```
+
+- 不影响 `ctx.sidebarRight` / better-sidebar 原生 tab；打开文件等仍会自动展开右栏。
+- better-sidebar 自己的底部工作台开关在 `header.utilities`，不受影响。
+
 ## 安装
 
 ```bash
@@ -39,7 +51,8 @@ cd "$DSH_HOME/profiles/web"          # 例如 ~/.dsh/profiles/web
 
 1. 打开任意会话，右上角出现「归档」按钮；
 2. 点击后会话从列表消失，进入归档态（可装 dsh-session-unarchive 查看「已归档」面板确认）；
-3. 用 unarchive 的「恢复」可还原会话。
+3. 用 unarchive 的「恢复」可还原会话；
+4. 会话头右上角**不再出现**官方「展开侧栏」按钮（corner 整块隐藏）；点击聊天里的文件仍应能打开原生右栏。
 
 ## 贡献
 

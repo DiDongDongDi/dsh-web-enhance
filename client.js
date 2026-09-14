@@ -1,17 +1,12 @@
 // dsh-web-enhance — client half（预构建 CJS bundle，零文件补丁）
 //
-// 在会话页右上角（conversation.session.header.actions）注册「归档」按钮，
-// 点击将当前会话移入归档态（调用 host 端 POST /api/web-enhance/archive）。
+// 功能：
+//   1. 会话页右上角「归档」按钮 → POST /api/web-enhance/archive
+//   2. 隐藏官方右侧栏展开钮（CSS）：席位 conversation.session.header.corner
+//      无法被插件抢占，且不能禁用 ui-sidebar-right（会拖垮 ui-chat），故用
+//      [data-conversation-header-corner] 整块隐藏。右栏仍可由 openResource 等自动展开。
 //
-// 数据通路：
-//   - 当前会话 id：PropsRuntime scope=session → sessionId
-//   - 归档动作：fetch POST /api/web-enhance/archive { sessionId }
-//   - 成功后 session 进入 archived，内置视图自动隐藏（dsh workspace 流广播
-//     host/archived-sessions-changed，client store 同步），当前会话 header
-//     消失（切换到 no-session hero），无需本地状态管理。
-//
-// 本 bundle 为预构建 CJS 格式（dsh client module 系统约定），只依赖平台
-// seed word `react`，不依赖任何其他插件的 client bundle。
+// 本 bundle 为预构建 CJS（只依赖平台 seed `react`）。
 window.__ModuleLoader__.load({
 	id: "dsh-web-enhance",
 	factory: (require) => {
@@ -21,14 +16,17 @@ window.__ModuleLoader__.load({
 		const react = require("react");
 		const { createElement: h, useState } = react;
 
-		// hover / focus 状态样式（dsh client 插件惯例，使用 dsh 设计系统变量）。
+		// hover / focus 状态样式 + 隐藏官方右栏展开钮（dsh client 插件惯例）。
 		if (typeof document !== "undefined" && document.querySelector('style[data-plugin-css="dsh-web-enhance"]') === null) {
 			const tag = document.createElement("style");
 			tag.setAttribute("data-plugin-css", "dsh-web-enhance");
 			tag.textContent = [
 				".dsh-enhance-archive-btn:hover{background:var(--dsw-alias-interactive-bg-hover)!important;color:var(--dsw-alias-label-primary)!important}",
 				".dsh-enhance-archive-btn:focus{outline:var(--dsw-alias-focus-ring,2px solid #3b82f6);outline-offset:1px}",
-				".dsh-enhance-archive-btn[aria-busy=true]{opacity:0.6;cursor:not-allowed}"
+				".dsh-enhance-archive-btn[aria-busy=true]{opacity:0.6;cursor:not-allowed}",
+				/* Official ExpandButton lives in a single seat we cannot steal; hide the whole corner. */
+				"[data-conversation-header-corner]{display:none!important}",
+				"[data-sidebar-right-expand],[data-sidebar-right-expand-placeholder]{display:none!important}"
 			].join("\n");
 			document.head.appendChild(tag);
 		}
