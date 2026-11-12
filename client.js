@@ -2,6 +2,7 @@
 //
 // 功能：
 //   1. 会话页右上角「归档」按钮 → POST /api/web-enhance/archive
+//   2. 地址栏 #session=<id> 时打开该会话（KLab 对话测试跳转）
 //
 // 注意：曾用 CSS 隐藏官方右栏 ExpandButton（corner）。在 better-sidebar v0.19+
 // 下右列即官方右侧栏（插件 tab 开在里面），藏掉展开钮等于失去手动开右栏入口，
@@ -142,8 +143,66 @@ window.__ModuleLoader__.load({
             );
         }
 
-        /** cordis service 依赖：slots（附加位注册）+ locale（i18n 字典）。 */
-        const inject = ["slots", "locale"];
+        const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/;
+
+        function sessionFromHash() {
+            const raw = String(window.location.hash || "").replace(/^#/, "");
+            if (!raw) return "";
+            const session = new URLSearchParams(raw).get("session") || "";
+            return SESSION_ID.test(session) ? session : "";
+        }
+
+        /**
+         * 打开 hash 里的会话。列表还没包含该 id 时 retain 会抛错，调用方重试。
+         * beginNavigation 取消启动时正在恢复的旧会话，避免它稍后盖回来。
+         */
+        function openHashedSession(ctx) {
+            const sessionId = sessionFromHash();
+            if (!sessionId) return false;
+            const layout = ctx.get("layout");
+            const workspace = ctx.get("uiWorkspace");
+            if (!workspace || typeof workspace.openSession !== "function") return false;
+            if (layout && typeof layout.beginNavigation === "function") {
+                layout.beginNavigation();
+            }
+            workspace.openSession(sessionId);
+            return true;
+        }
+
+        function watchSessionHash(ctx) {
+            let timer = 0;
+            const stopTimer = () => {
+                if (!timer) return;
+                window.clearTimeout(timer);
+                timer = 0;
+            };
+            const run = () => {
+                stopTimer();
+                let attempts = 0;
+                const tick = () => {
+                    if (!sessionFromHash()) return;
+                    try {
+                        if (openHashedSession(ctx)) return;
+                    } catch (error) {
+                        if (attempts >= 39) {
+                            console.warn("[dsh-web-enhance] openSession failed:", error);
+                        }
+                    }
+                    attempts += 1;
+                    if (attempts < 40) timer = window.setTimeout(tick, 250);
+                };
+                tick();
+            };
+            run();
+            window.addEventListener("hashchange", run);
+            return () => {
+                stopTimer();
+                window.removeEventListener("hashchange", run);
+            };
+        }
+
+        /** slots / locale 给归档按钮；uiWorkspace / layout 给 #session= 跳转。 */
+        const inject = ["slots", "locale", "uiWorkspace", "layout"];
 
         /**
          * 注册入口：i18n + conversation.session.header.actions 附加位。
@@ -165,6 +224,10 @@ window.__ModuleLoader__.load({
                     },
                     ArchiveButton,
                 ),
+            );
+            ctx.effect(
+                () => watchSessionHash(ctx),
+                "dsh-web-enhance: session hash",
             );
         }
 

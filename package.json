@@ -1,7 +1,7 @@
 {
     "name": "dsh-web-enhance",
-  "version": "0.2.1",
-  "description": "DSH Web GUI enhancements — session archive button (Cordis plugin, no file patches).",
+  "version": "0.2.2",
+  "description": "DSH Web GUI enhancements — session archive button and #session= deep link (Cordis plugin, no file patches).",
     "keywords": [
         "deepseek-harness",
         "dsh",
