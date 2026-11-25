@@ -3,6 +3,7 @@
 // 功能：
 //   1. 会话页右上角「归档」按钮 → POST /api/web-enhance/archive
 //   2. 地址栏 #session=<id> 时打开该会话（KLab 对话测试跳转）
+//   3. 可选 #session=<id>&prompt=<text>：打开后预填输入框草稿（不发送）
 //
 // 注意：曾用 CSS 隐藏官方右栏 ExpandButton（corner）。在 better-sidebar v0.19+
 // 下右列即官方右侧栏（插件 tab 开在里面），藏掉展开钮等于失去手动开右栏入口，
@@ -145,16 +146,74 @@ window.__ModuleLoader__.load({
 
         const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/;
 
-        function sessionFromHash() {
+        function hashParams() {
             const raw = String(window.location.hash || "").replace(/^#/, "");
-            if (!raw) return "";
-            const session = new URLSearchParams(raw).get("session") || "";
+            return raw ? new URLSearchParams(raw) : new URLSearchParams();
+        }
+
+        function sessionFromHash() {
+            const session = hashParams().get("session") || "";
             return SESSION_ID.test(session) ? session : "";
+        }
+
+        function promptFromHash() {
+            const prompt = hashParams().get("prompt");
+            if (prompt == null) return "";
+            const text = String(prompt).trim();
+            return text ? text : "";
+        }
+
+        /** 草稿应用成功后去掉 hash 里的 prompt，避免刷新反复覆盖用户编辑。 */
+        function stripPromptFromHash() {
+            const params = hashParams();
+            if (!params.has("prompt")) return;
+            params.delete("prompt");
+            const next = params.toString();
+            const url = window.location.pathname + window.location.search + (next ? "#" + next : "");
+            window.history.replaceState(null, "", url);
+        }
+
+        /**
+         * 打开会话后预填输入框（requestDraftInitialization，不发送）。
+         * @returns {"done"|"retry"} binding 未就绪时 retry；失败只 warn 并 done，不挡切会话。
+         */
+        function applyHashDraft(ctx, sessionId) {
+            const prompt = promptFromHash();
+            if (!prompt) return "done";
+            const sessions = ctx.get("sessions");
+            const conversation = ctx.get("conversation");
+            if (
+                !sessions ||
+                typeof sessions.binding !== "function" ||
+                !conversation ||
+                !conversation.input ||
+                typeof conversation.input.requestDraftInitialization !== "function"
+            ) {
+                return "retry";
+            }
+            const binding = sessions.binding(sessionId);
+            if (binding === undefined) return "retry";
+            try {
+                const result = conversation.input.requestDraftInitialization(binding, {
+                    prompt,
+                    clearPreviousDraft: true,
+                });
+                if (result === "blocked") {
+                    console.warn("[dsh-web-enhance] draft initialization blocked");
+                }
+                stripPromptFromHash();
+                return "done";
+            } catch (error) {
+                console.warn("[dsh-web-enhance] draft initialization failed:", error);
+                stripPromptFromHash();
+                return "done";
+            }
         }
 
         /**
          * 打开 hash 里的会话。列表还没包含该 id 时 retain 会抛错，调用方重试。
          * beginNavigation 取消启动时正在恢复的旧会话，避免它稍后盖回来。
+         * 可选 prompt= 预填输入框草稿（不发送）。
          */
         function openHashedSession(ctx) {
             const sessionId = sessionFromHash();
@@ -166,7 +225,7 @@ window.__ModuleLoader__.load({
                 layout.beginNavigation();
             }
             workspace.openSession(sessionId);
-            return true;
+            return applyHashDraft(ctx, sessionId) !== "retry";
         }
 
         function watchSessionHash(ctx) {
@@ -201,8 +260,8 @@ window.__ModuleLoader__.load({
             };
         }
 
-        /** slots / locale 给归档按钮；uiWorkspace / layout 给 #session= 跳转。 */
-        const inject = ["slots", "locale", "uiWorkspace", "layout"];
+        /** slots / locale 给归档；uiWorkspace / layout / sessions / conversation 给 #session=&prompt=。 */
+        const inject = ["slots", "locale", "uiWorkspace", "layout", "sessions", "conversation"];
 
         /**
          * 注册入口：i18n + conversation.session.header.actions 附加位。

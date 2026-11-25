@@ -4,6 +4,15 @@ DeepSeek Harness **Web GUI 增强**插件集合（Cordis 纯插件，零文件�
 
 当前包含功能：
 
+## 0. `#session=` / `#prompt=` 深链
+
+KLab 等外链可打开 iframe 地址带 hash：
+
+- `#session=<id>`：打开指定会话
+- `#session=<id>&prompt=<text>`：打开后把 `prompt` 预填进输入框草稿（调用
+  `requestDraftInitialization`，**不发送**）。应用成功后会从 hash 去掉 `prompt`，
+  避免刷新反复覆盖用户编辑。
+
 ## 1. 会话页「归档」按钮
 
 在会话页右上角（header 操作区）新增「归档」按钮，点击把**当前会话**移入归档态，
