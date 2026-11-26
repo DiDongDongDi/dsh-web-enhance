@@ -4,6 +4,7 @@
 //   1. 会话页右上角「归档」按钮 → POST /api/web-enhance/archive
 //   2. 地址栏 #session=<id> 时打开该会话（KLab 对话测试跳转）
 //   3. 可选 #session=<id>&prompt=<text>：打开后预填输入框草稿（不发送）
+//   4. 工作区会话列表不折叠：自动点开「展开其余 N 个会话」，并藏掉该按钮
 //
 // 注意：曾用 CSS 隐藏官方右栏 ExpandButton（corner）。在 better-sidebar v0.19+
 // 下右列即官方右侧栏（插件 tab 开在里面），藏掉展开钮等于失去手动开右栏入口，
@@ -32,6 +33,8 @@ window.__ModuleLoader__.load({
                 ".dsh-enhance-archive-btn:hover{background:var(--dsw-alias-interactive-bg-hover)!important;color:var(--dsw-alias-label-primary)!important}",
                 ".dsh-enhance-archive-btn:focus{outline:var(--dsw-alias-focus-ring,2px solid #3b82f6);outline-offset:1px}",
                 ".dsh-enhance-archive-btn[aria-busy=true]{opacity:0.6;cursor:not-allowed}",
+                // 官方水位只露出前几条，按钮是 data-row-key="overflow:<group>"。
+                'button[data-row-key^="overflow:"]{display:none!important}',
             ].join("\n");
             document.head.appendChild(tag);
         }
@@ -260,6 +263,59 @@ window.__ModuleLoader__.load({
             };
         }
 
+        /**
+         * 工作区侧栏默认每个分组只露出前 5 条非空会话，其余收进
+         * 「展开其余 N 个会话」（aria-expanded=false）。点一次最多再展开 5 条，
+         * 剩余不超过 5 时一次展开全部。这里在按钮出现后持续点到展开。
+         * 折叠父级工作区会把水位清掉，所以要一直盯着，不能只点一次。
+         */
+        function watchSessionOverflow() {
+            const root = document.body || document.documentElement;
+            if (!root) return function () {};
+            const attempts = new Map();
+            let frame = 0;
+            const pump = () => {
+                frame = 0;
+                const buttons = document.querySelectorAll(
+                    'button[data-row-key^="overflow:"][aria-expanded="false"]',
+                );
+                let clicked = false;
+                for (const button of buttons) {
+                    const key = button.getAttribute("data-row-key") || "";
+                    const used = attempts.get(key) || 0;
+                    if (used >= 80) continue;
+                    attempts.set(key, used + 1);
+                    if (used + 1 === 80) {
+                        console.warn("[dsh-web-enhance] session list stayed folded:", key);
+                    }
+                    button.click();
+                    clicked = true;
+                }
+                for (const key of attempts.keys()) {
+                    const selector =
+                        'button[data-row-key="' + CSS.escape(key) + '"][aria-expanded="false"]';
+                    if (document.querySelector(selector) === null) attempts.delete(key);
+                }
+                if (clicked && !frame) frame = window.requestAnimationFrame(pump);
+            };
+            const schedule = () => {
+                if (frame) return;
+                frame = window.requestAnimationFrame(pump);
+            };
+            schedule();
+            const observer = new MutationObserver(schedule);
+            observer.observe(root, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ["aria-expanded"],
+            });
+            return () => {
+                observer.disconnect();
+                if (frame) window.cancelAnimationFrame(frame);
+            };
+        }
+
         /** slots / locale 给归档；uiWorkspace / layout / sessions / conversation 给 #session=&prompt=。 */
         const inject = ["slots", "locale", "uiWorkspace", "layout", "sessions", "conversation"];
 
@@ -287,6 +343,10 @@ window.__ModuleLoader__.load({
             ctx.effect(
                 () => watchSessionHash(ctx),
                 "dsh-web-enhance: session hash",
+            );
+            ctx.effect(
+                () => watchSessionOverflow(),
+                "dsh-web-enhance: session overflow",
             );
         }
 
