@@ -1,6 +1,6 @@
 {
     "name": "dsh-web-enhance",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "DSH Web GUI enhancements — session archive, #session= deep link, optional #prompt= draft prefill, keep workspace session lists expanded (Cordis plugin, no file patches).",
     "keywords": [
         "deepseek-harness",

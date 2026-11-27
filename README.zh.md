@@ -16,8 +16,9 @@ KLab 等外链可打开 iframe 地址带 hash：
 
 - `#session=<id>`：打开指定会话
 - `#session=<id>&prompt=<text>`：打开后把 `prompt` 预填进输入框草稿（调用
-  `requestDraftInitialization`，**不发送**）。应用成功后会从 hash 去掉 `prompt`，
-  避免刷新反复覆盖用户编辑。
+  `requestDraftInitialization`，**不发送**）。输入框里已有内容时不覆盖。
+  同一浏览器标签页里，这段预填对一个会话只写一次；应用后从 hash 去掉 `prompt`。
+  对话页被切走再回来时 iframe 会按原地址重载，不能把任务名再填进已经清空的输入框。
 
 ## 1. 会话页「归档」按钮
 

@@ -3,7 +3,7 @@
 // 功能：
 //   1. 会话页右上角「归档」按钮 → POST /api/web-enhance/archive
 //   2. 地址栏 #session=<id> 时打开该会话（KLab 对话测试跳转）
-//   3. 可选 #session=<id>&prompt=<text>：打开后预填输入框草稿（不发送）
+//   3. 可选 #session=<id>&prompt=<text>：打开后预填输入框草稿（不发送，同一会话只填一次）
 //   4. 工作区会话列表不折叠：自动点开「展开其余 N 个会话」，并藏掉该按钮
 //
 // 注意：曾用 CSS 隐藏官方右栏 ExpandButton（corner）。在 better-sidebar v0.19+
@@ -177,12 +177,40 @@ window.__ModuleLoader__.load({
         }
 
         /**
+         * 同一标签页里，某个会话的某段预填只写一次。
+         * iframe 被页签切走再挂回来时会按最初的 src 重新加载，hash 里的 prompt 还在，
+         * 不能再次 requestDraftInitialization，否则会把已经清空或发出去的输入框又填上。
+         */
+        const APPLIED_PROMPT_KEY = "dsh-web-enhance:applied-prompt:";
+
+        function readAppliedPrompt(sessionId) {
+            try {
+                return sessionStorage.getItem(APPLIED_PROMPT_KEY + sessionId) || "";
+            } catch (_error) {
+                return "";
+            }
+        }
+
+        function rememberAppliedPrompt(sessionId, prompt) {
+            try {
+                sessionStorage.setItem(APPLIED_PROMPT_KEY + sessionId, prompt);
+            } catch (_error) {
+                /* 写不进时只靠本次去掉 hash，刷新仍可能再填一次。 */
+            }
+        }
+
+        /**
          * 打开会话后预填输入框（requestDraftInitialization，不发送）。
+         * 输入框里已经有内容时保留，不覆盖。
          * @returns {"done"|"retry"} binding 未就绪时 retry；失败只 warn 并 done，不挡切会话。
          */
         function applyHashDraft(ctx, sessionId) {
             const prompt = promptFromHash();
             if (!prompt) return "done";
+            if (readAppliedPrompt(sessionId) === prompt) {
+                stripPromptFromHash();
+                return "done";
+            }
             const sessions = ctx.get("sessions");
             const conversation = ctx.get("conversation");
             if (
@@ -199,11 +227,14 @@ window.__ModuleLoader__.load({
             try {
                 const result = conversation.input.requestDraftInitialization(binding, {
                     prompt,
-                    clearPreviousDraft: true,
+                    whenDraftExists: "keep",
                 });
                 if (result === "blocked") {
                     console.warn("[dsh-web-enhance] draft initialization blocked");
+                    stripPromptFromHash();
+                    return "done";
                 }
+                rememberAppliedPrompt(sessionId, prompt);
                 stripPromptFromHash();
                 return "done";
             } catch (error) {
